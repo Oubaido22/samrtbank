@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/smartbank
+    url: jdbc:mysql://localhost:3306/otbs
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password:

@@ -15,10 +15,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.webapp.bankingportal.repository.UserRepository;
 import com.webapp.bankingportal.dto.LoginRequest;
 import com.webapp.bankingportal.dto.OtpRequest;
@@ -88,20 +85,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid account number or password");
         }
 
-        // Fetch the user from the database
-        User user = userRepository.findByAccountAccountNumber(loginRequest.getAccountNumber());
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
-        }
 
-        // Check if the user account is approved
-        if (!user.isApproved()) {
-            // Account is not approved, return 403 Forbidden
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your account is not approved yet.");
-        }
+
 
         // If authentication is successful and account is approved, generate JWT token
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getAccountNumber());
+        System.out.println(userDetails);
+
         String token = jwtTokenUtil.generateToken(userDetails);
         Map<String, String> result = new HashMap<>();
         result.put("token", token);
@@ -188,6 +178,12 @@ public class UserController {
 
 
         return ResponseEntity.ok(userResponse);
+    }
+
+    @PutMapping("/admin/approve/{userId}")
+    public ResponseEntity<String> approveUser(@PathVariable Long userId, @RequestParam boolean isApproved) {
+        userService.approveUser(userId, isApproved);
+        return ResponseEntity.ok("User " + (isApproved ? "approved" : "disapproved") + " successfully");
     }
 
 }

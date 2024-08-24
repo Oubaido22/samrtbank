@@ -17,7 +17,7 @@ public class User {
 
 	@Column(unique = true)
 	private String email;
-	private boolean isApproved = false;
+
 	private String address;
 	private String phone_number;
 	private int otpRetryCount;
@@ -32,6 +32,9 @@ public class User {
 	@Column(name = "role")
 	private Set<String> roles = new HashSet<>();
 
+
+	@Column(name = "approved")
+	private boolean approved;
 
 
 
@@ -110,12 +113,13 @@ public class User {
 	}
 
 
-	public void setApproved(boolean approved) {
-		isApproved = approved;
+	// getters and setters
+	public boolean isApproved() {
+		return approved;
 	}
 
-	public boolean isApproved() {
-		return isApproved;
+	public void setApproved(boolean approved) {
+		this.approved = approved;
 	}
 
 	public Set<String> getRoles() {

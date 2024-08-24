@@ -3,6 +3,7 @@ package com.webapp.bankingportal.service;
 import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +23,10 @@ public class JWTUserDetailsService implements UserDetailsService {
         User user = userRepository.findByAccountAccountNumber(accountNumber);
         if (user == null) {
             throw new UsernameNotFoundException("Invalid account number");
+        }
+
+        if (!user.isApproved()) {
+            throw new DisabledException("Waiting for approval");
         }
 
         // Return a UserDetails object that wraps the User entity
