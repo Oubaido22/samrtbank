@@ -1,11 +1,10 @@
 package com.webapp.bankingportal.service;
 
-import com.webapp.bankingportal.entity.UserRole;
 import com.webapp.bankingportal.exception.UserValidation;
-import com.webapp.bankingportal.repository.AccountRepository;
-import com.webapp.bankingportal.repository.UserRoleRepository;
 import com.webapp.bankingportal.util.LoggedinUser;
-import org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration;
+import net.bytebuddy.asm.Advice;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,62 +17,53 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService{
 
-	private final UserRepository userRepository;
+    private final UserRepository userRepository;
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
-    private final AccountRepository accountRepository;
-    private final EmailService emailService;
-    private final UserRoleRepository userRoleRepository;
-    private final SystemMetricsAutoConfiguration systemMetricsAutoConfiguration;
+
+    private EmailService emailService;
 
 
-    public UserServiceImpl(UserRepository userRepository, UserRoleRepository userRoleRepository, AccountService accountService, AccountRepository accountRepository, EmailService emailService, PasswordEncoder passwordEncoder, SystemMetricsAutoConfiguration systemMetricsAutoConfiguration) {
+
+    public UserServiceImpl(UserRepository userRepository, EmailService emailService,AccountService accountService,PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.userRoleRepository = userRoleRepository;
         this.accountService = accountService;
-        this.accountRepository = accountRepository; // Inject AccountRepository
-        this.emailService = emailService; // I
+        this.emailService = emailService;
         this.passwordEncoder =  passwordEncoder;
-        this.systemMetricsAutoConfiguration = systemMetricsAutoConfiguration;
     }
-    
+
     @Override
     public User getUserByAccountNumber(String account_no) {
-    	return userRepository.findByAccountAccountNumber(account_no);
+        return userRepository.findByAccountAccountNumber(account_no);
     }
 
     @Override
     public User registerUser(User user) {
-        
-    	 String encodedPassword = passwordEncoder.encode(user.getPassword());
-         user.setPassword(encodedPassword);
-         user.setApproved(false);
 
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
 
         // Save the user details
         User savedUser = userRepository.save(user);
-
 
         // Create an account for the user
         Account account = accountService.createAccount(savedUser);
 
         savedUser.setAccount(account);
         userRepository.save(savedUser);
-        
+
         System.out.println(savedUser.getAccount().getAccountNumber());
         System.out.println(account.getUser().getName());
 
 
-
-        
         return savedUser;
     }
 
-	@Override
-	public void saveUser(User user) {
-		userRepository.save(user);
-		
-	}
+    @Override
+    public void saveUser(User user) {
+        userRepository.save(user);
+
+    }
 
     @Override
     public User updateUser(User user) {
@@ -103,36 +93,42 @@ public class UserServiceImpl implements UserService{
     }
 
 
-
     @Override
-    public List<User> getPendingUsers() {
-
-        System.out.println(userRepository.findByApproved(false));
-
-
-        return userRepository.findByApproved(false);
+    public List<User> findUnapprovedUsers() {
+        return userRepository.findByApprovedFalse();
     }
 
-
     @Override
-    public void approveUser(Long userId, boolean isApproved) {
-        User user = userRepository.findById(userId)
+    public void approveUser(Long id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setApproved(isApproved);
-
-        // If approved, create an account
-        if (isApproved) {
-            Account newAccount = new Account();
-            newAccount.setAccountNumber(user.getAccount().getAccountNumber());
-            newAccount.setUser(user);
-            accountRepository.save(newAccount);
-
-            // Send approval email
-            emailService.sendEmail(user.getEmail(), newAccount.getAccountNumber(),"this is an approval email");
-        }
-
+        user.setApproved(true);
         userRepository.save(user);
+        // Send an approval email if required
     }
+
+    @Override
+    public void rejectUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Send a rejection email
+        // emailService.sendRejectionEmail(user.getEmail(), user.getName());
+
+        // Delete the user
+        userRepository.delete(user);
+    }
+/*
+    private void sendRejectionEmail(User user) {
+        // Implement email sending logic here
+        // Example using JavaMailSender:
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject("Account Rejected");
+        message.setText("Dear " + user.getName() + ",\n\nYour account has been rejected.\n\nBest regards,\nYour Company");
+
+        javaMailSender.send(message);
+    }*/
 
 
 }

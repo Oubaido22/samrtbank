@@ -12,8 +12,11 @@ public interface UserService {
 	public void saveUser(User user);
 
 	User updateUser(User user);
-	List<User> getPendingUsers();
 
-	void approveUser(Long userId, boolean isApproved);
+	List<User> findUnapprovedUsers(); // Method to retrieve users who haven't been approved yet
+
+	void approveUser(Long id);
+	void rejectUser(Long id);
+
 
 }

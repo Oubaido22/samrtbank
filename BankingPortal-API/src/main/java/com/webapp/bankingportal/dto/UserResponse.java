@@ -11,7 +11,7 @@ public class UserResponse  {
     private String IFSC_code;
     private String branch;
     private String account_type;
-	private boolean isApproved;
+	private boolean approved;
     
     
 	public String getName() {
@@ -65,10 +65,10 @@ public class UserResponse  {
 
 
 	public boolean isApproved() {
-		return isApproved;
+		return approved;
 	}
 
 	public void setApproved(boolean approved) {
-		isApproved = approved;
+		this.approved = approved;
 	}
 }

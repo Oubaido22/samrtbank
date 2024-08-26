@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,6 +26,7 @@ public class User {
 
 	// Establishing a one-to-one relationship with the account
 	@OneToOne(cascade = CascadeType.ALL)
+	@JsonManagedReference
 	private Account account;
 
 	@ElementCollection(fetch = FetchType.EAGER)

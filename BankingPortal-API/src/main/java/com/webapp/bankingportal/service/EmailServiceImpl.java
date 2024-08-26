@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -87,4 +88,13 @@ public class EmailServiceImpl implements EmailService{
 	        }
 	    }
 
+
+	public void sendRejectionEmail(String toEmail, String userName) {
+		SimpleMailMessage message = new SimpleMailMessage();
+		message.setTo(toEmail);
+		message.setSubject("Account Rejection");
+		message.setText("Dear " + userName + ",\n\nWe regret to inform you that your account application has been rejected.\n\nBest regards,\nBank Team");
+
+		mailSender.send(message);
+	}
 }

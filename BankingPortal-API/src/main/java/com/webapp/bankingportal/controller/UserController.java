@@ -1,13 +1,15 @@
 package com.webapp.bankingportal.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import com.webapp.bankingportal.entity.UserRole;
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.webapp.bankingportal.repository.UserRepository;
-import com.webapp.bankingportal.repository.UserRoleRepository;
+import com.webapp.bankingportal.service.EmailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
-import com.webapp.bankingportal.repository.UserRepository;
+
 import com.webapp.bankingportal.dto.LoginRequest;
 import com.webapp.bankingportal.dto.OtpRequest;
 import com.webapp.bankingportal.dto.OtpVerificationRequest;
@@ -25,45 +27,38 @@ import com.webapp.bankingportal.entity.User;
 import com.webapp.bankingportal.security.JwtTokenUtil;
 import com.webapp.bankingportal.service.OTPService;
 import com.webapp.bankingportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-	private final AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsService userDetailsService;
     private final UserService userService;
     private final OTPService otpService;
+    @Autowired
+    private EmailService emailService;
     private final UserRepository userRepository;
 
-
-    public UserController(UserRepository userRepository,UserService userService, AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil,
+    public UserController(UserRepository userRepository,EmailService emailService, UserService userService, AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil,
                           UserDetailsService userDetailsService, OTPService otpService) {
         this.userService =  userService;
-        this.userRepository = userRepository;
+        this.userRepository= userRepository;
+        this.emailService = emailService;
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
         this.otpService = otpService;
     }
 
-    @Autowired
-    private UserRoleRepository userRoleRepository;
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@RequestBody User user) {
         User registeredUser = userService.registerUser(user);
 
-        UserRole userRole = new UserRole();
-        userRole.setUser(registeredUser);
-        userRole.setRole("USER");
-        // Save the user role
-        userRoleRepository.save(userRole);
         UserResponse userResponse = new UserResponse();
         userResponse.setName(registeredUser.getName());
         userResponse.setEmail(registeredUser.getEmail());
-        userResponse.setApproved(false);
         userResponse.setAccountNumber(registeredUser.getAccount().getAccountNumber());
         userResponse.setIFSC_code(registeredUser.getAccount().getIFSC_code());
         userResponse.setBranch(registeredUser.getAccount().getBranch());
@@ -85,34 +80,31 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid account number or password");
         }
 
-
-
-
-        // If authentication is successful and account is approved, generate JWT token
+        // If authentication successful, generate JWT token
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getAccountNumber());
         System.out.println(userDetails);
-
         String token = jwtTokenUtil.generateToken(userDetails);
-        Map<String, String> result = new HashMap<>();
+        System.out.println(token);
+        Map<String, String> result =  new HashMap<>();
         result.put("token", token);
-
         // Return the JWT token in the response
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(result , HttpStatus.OK);
     }
-    
+
+
     @PostMapping("/generate-otp")
     public ResponseEntity<?> generateOtp(@RequestBody OtpRequest otpRequest) {
 
-    	 String accountNumber = otpRequest.getAccountNumber();
+        String accountNumber = otpRequest.getAccountNumber();
 
-         // Fetch the user by account number to get the associated email
-         User user = userService.getUserByAccountNumber(accountNumber);
-         if (user == null) {
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found for the given account number");
-         }
+        // Fetch the user by account number to get the associated email
+        User user = userService.getUserByAccountNumber(accountNumber);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found for the given account number");
+        }
 
-         // Generate OTP and save it in the database
-         String otp = otpService.generateOTP(accountNumber);
+        // Generate OTP and save it in the database
+        String otp = otpService.generateOTP(accountNumber);
 
 
         // Send the OTP to the user's email address asynchronously
@@ -136,12 +128,12 @@ public class UserController {
         }
     }
 
-    
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtpAndLogin(@RequestBody OtpVerificationRequest otpVerificationRequest) {
         String accountNumber = otpVerificationRequest.getAccountNumber();
         String otp = otpVerificationRequest.getOtp();
-        
+
         System.out.println(accountNumber+"  "+otp);
 
         // Validate OTP against the stored OTP in the database
@@ -150,7 +142,7 @@ public class UserController {
 
         if (isValidOtp) {
             // If OTP is valid, generate JWT token and perform user login
-        	
+
             // If authentication successful, generate JWT token
             UserDetails userDetails = userDetailsService.loadUserByUsername(accountNumber);
             String token = jwtTokenUtil.generateToken(userDetails);
@@ -180,10 +172,20 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
-    @PutMapping("/admin/approve/{userId}")
-    public ResponseEntity<String> approveUser(@PathVariable Long userId, @RequestParam boolean isApproved) {
-        userService.approveUser(userId, isApproved);
-        return ResponseEntity.ok("User " + (isApproved ? "approved" : "disapproved") + " successfully");
+    @GetMapping("/unapproved")
+    public List<User> getUnapprovedUsers() {
+        return userService.findUnapprovedUsers();
     }
 
+    @PostMapping("/approve/{id}")
+    public ResponseEntity<?> approveUser(@PathVariable Long id) {
+        userService.approveUser(id);
+        return ResponseEntity.ok("User approved successfully.");
+    }
+
+    @DeleteMapping("/reject/{id}")
+    public ResponseEntity<?> rejectUser(@PathVariable Long id) {
+        userService.rejectUser(id);
+        return ResponseEntity.ok("User rejected successfully.");
+    }
 }
