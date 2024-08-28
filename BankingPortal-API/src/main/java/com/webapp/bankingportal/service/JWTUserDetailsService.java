@@ -3,6 +3,8 @@ package com.webapp.bankingportal.service;
 import java.util.Collections;
 
 import com.webapp.bankingportal.controller.UserController;
+import com.webapp.bankingportal.exception.UserNotApprovedException;
+import com.webapp.bankingportal.exception.UserValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,6 +27,9 @@ public class JWTUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Invalid account number");
         }
 
+        if (!user.isApproved()) {
+            throw new UserNotApprovedException("User is not approved yet.");
+        }
 
         // Return a UserDetails object that wraps the User entity
         return new org.springframework.security.core.userdetails.User(

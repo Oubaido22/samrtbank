@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService{
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Send a rejection email
-        // emailService.sendRejectionEmail(user.getEmail(), user.getName());
+        emailService.sendRejectionEmail(user.getEmail(), user.getName());
 
         // Delete the user
         userRepository.delete(user);
