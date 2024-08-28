@@ -1,5 +1,6 @@
 package com.webapp.bankingportal.controller;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import com.webapp.bankingportal.entity.User;
 import com.webapp.bankingportal.security.JwtTokenUtil;
 import com.webapp.bankingportal.service.OTPService;
 import com.webapp.bankingportal.service.UserService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -187,5 +189,40 @@ public class UserController {
     public ResponseEntity<?> rejectUser(@PathVariable Long id) {
         userService.rejectUser(id);
         return ResponseEntity.ok("User rejected successfully.");
+    }
+
+
+    @PostMapping("/upload-info")
+    public ResponseEntity<String> uploadUserInfo(
+            @RequestParam("accountNumber") String accountNumber,  // Accept user ID to identify the user
+            @RequestParam("userType") String userType,
+            @RequestParam("residenceVerification") MultipartFile residenceVerification,
+            @RequestParam("idPicture") MultipartFile idPicture) {
+
+        // Convert MultipartFile to byte[]
+        byte[] residenceVerificationBytes;
+        byte[] idPictureBytes;
+        try {
+            residenceVerificationBytes = residenceVerification.getBytes();
+            idPictureBytes = idPicture.getBytes();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload error.");
+        }
+
+        // Fetch user from the database
+        User user = userService.getUserByAccountNumber(accountNumber);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+
+        // Set the additional information
+        user.setUserType(userType);
+        user.setResidenceVerificationImage(residenceVerificationBytes);
+        user.setIdImage(idPictureBytes);
+
+        // Update the user in the database
+        userService.updateUser(user);
+
+        return ResponseEntity.ok("Additional information updated successfully.");
     }
 }

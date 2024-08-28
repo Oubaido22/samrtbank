@@ -34,6 +34,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
+		String requestURI = request.getRequestURI();
+
+		// Skip the JWT filter for the /upload-info endpoint
+		if (requestURI.startsWith("/api/upload-info")) {
+			System.out.println("Skipping JWT filter for /upload-info endpoint");
+			filterChain.doFilter(request, response);
+			return;
+		}
+
 		String requestTokenHeader = request.getHeader("Authorization");
 
 		String username = null;

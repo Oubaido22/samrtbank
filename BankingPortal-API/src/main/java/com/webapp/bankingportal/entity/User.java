@@ -18,6 +18,7 @@ public class User {
 
 	@Column(unique = true)
 	private String email;
+	private String userType;
 
 	private String address;
 	private String phone_number;
@@ -37,6 +38,12 @@ public class User {
 
 	@Column(name = "approved")
 	private boolean approved;
+
+	@Lob  // Use Large Object type if storing as a BLOB
+	private byte[] residenceVerificationImage;
+
+	@Lob
+	private byte[] idImage;
 
 
 
@@ -130,5 +137,29 @@ public class User {
 
 	public void setRoles(Set<String> roles) {
 		this.roles = roles;
+	}
+
+	public byte[] getIdImage() {
+		return idImage;
+	}
+
+	public void setIdImage(byte[] idImage) {
+		this.idImage = idImage;
+	}
+
+	public byte[] getResidenceVerificationImage() {
+		return residenceVerificationImage;
+	}
+
+	public void setResidenceVerificationImage(byte[] residenceVerificationImage) {
+		this.residenceVerificationImage = residenceVerificationImage;
+	}
+
+	public String getUserType() {
+		return userType;
+	}
+
+	public void setUserType(String userType) {
+		this.userType = userType;
 	}
 }

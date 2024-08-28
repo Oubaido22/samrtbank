@@ -62,23 +62,35 @@ public class WebSecurityConfig {
 	};
 
 	@Bean
+
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				.csrf().disable() // Disable CSRF for simplicity, adjust if needed
-				.authorizeHttpRequests()
-				.requestMatchers(WHITE_LIST_URLS).permitAll()
-				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-				.anyRequest().authenticated() // Secure other endpoints
-				.and()
-				.exceptionHandling()
-				.authenticationEntryPoint(jwtAuthenticationEntryPoint) // Handle unauthorized access
-				.and()
-				.sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS); // No sessions for JWT
+				.csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity; adjust if needed
+				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
+						.requestMatchers("/api/users/register",
+								"/api/users/login",
+								"/api/users/generate-otp",
+								"/api/users/verify-otp",
+								"/api/users/upload-info", // Include this endpoint
+								"/swagger-ui.html",
+								"/v3/api-docs/**",
+								"/swagger-ui/**",
+								"/actuator/**").permitAll() // Whitelisted endpoints
+						.anyRequest().authenticated() // Secure all other endpoints
+				)
+				.exceptionHandling(exception -> exception
+						.authenticationEntryPoint(jwtAuthenticationEntryPoint) // Handle unauthorized access
+				)
+				.sessionManagement(session -> session
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions for JWT
+				);
 
 		// Add JWT filter before the default username/password authentication filter
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
+
+
 }

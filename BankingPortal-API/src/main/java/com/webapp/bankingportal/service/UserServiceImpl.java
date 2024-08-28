@@ -3,6 +3,7 @@ package com.webapp.bankingportal.service;
 import com.webapp.bankingportal.exception.UserValidation;
 import com.webapp.bankingportal.util.LoggedinUser;
 import net.bytebuddy.asm.Advice;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,11 +12,16 @@ import org.springframework.stereotype.Service;
 import com.webapp.bankingportal.entity.Account;
 import com.webapp.bankingportal.entity.User;
 import com.webapp.bankingportal.repository.UserRepository;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService{
+
+    @Autowired
+
 
     private final UserRepository userRepository;
     private final AccountService accountService;
@@ -38,6 +44,12 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+
+    @Override
     public User registerUser(User user) {
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
@@ -49,7 +61,9 @@ public class UserServiceImpl implements UserService{
         // Create an account for the user
         Account account = accountService.createAccount(savedUser);
 
+
         savedUser.setAccount(account);
+
         userRepository.save(savedUser);
 
         System.out.println(savedUser.getAccount().getAccountNumber());
@@ -118,6 +132,9 @@ public class UserServiceImpl implements UserService{
         // Delete the user
         userRepository.delete(user);
     }
+
+
+
 /*
     private void sendRejectionEmail(User user) {
         // Implement email sending logic here

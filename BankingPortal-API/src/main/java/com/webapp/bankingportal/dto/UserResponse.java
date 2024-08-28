@@ -12,6 +12,9 @@ public class UserResponse  {
     private String branch;
     private String account_type;
 	private boolean approved;
+	private String userType; // New field
+	private String residenceVerificationImageUrl; // URL to access the image
+	private String idImageUrl;
     
     
 	public String getName() {
@@ -70,5 +73,29 @@ public class UserResponse  {
 
 	public void setApproved(boolean approved) {
 		this.approved = approved;
+	}
+
+	public String getResidenceVerificationImageUrl() {
+		return residenceVerificationImageUrl;
+	}
+
+	public void setResidenceVerificationImageUrl(String residenceVerificationImageUrl) {
+		this.residenceVerificationImageUrl = residenceVerificationImageUrl;
+	}
+
+	public String getIdImageUrl() {
+		return idImageUrl;
+	}
+
+	public void setIdImageUrl(String idImageUrl) {
+		this.idImageUrl = idImageUrl;
+	}
+
+	public String getUserType() {
+		return userType;
+	}
+
+	public void setUserType(String userType) {
+		this.userType = userType;
 	}
 }
