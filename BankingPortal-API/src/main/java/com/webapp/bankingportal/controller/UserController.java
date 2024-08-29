@@ -58,6 +58,11 @@ public class UserController {
     public ResponseEntity<UserResponse> registerUser(@RequestBody User user) {
         User registeredUser = userService.registerUser(user);
 
+
+        // Generate temporary token with restricted access
+        //UserDetails userDetails = userDetailsService.loadUserByUsername(registeredUser.getAccount().getAccountNumber());
+        //String tempToken = jwtTokenUtil.generateTemporaryToken(userDetails);
+
         UserResponse userResponse = new UserResponse();
         userResponse.setName(registeredUser.getName());
         userResponse.setEmail(registeredUser.getEmail());
@@ -65,6 +70,8 @@ public class UserController {
         userResponse.setIFSC_code(registeredUser.getAccount().getIFSC_code());
         userResponse.setBranch(registeredUser.getAccount().getBranch());
         userResponse.setAccount_type(registeredUser.getAccount().getAccount_type());
+        //userResponse.setToken(token);
+        //userResponse.setToken(tempToken);
 
 
         return ResponseEntity.ok(userResponse);
@@ -171,6 +178,7 @@ public class UserController {
         userResponse.setAccount_type(updateUser.getAccount().getAccount_type());
 
 
+
         return ResponseEntity.ok(userResponse);
     }
 
@@ -199,7 +207,10 @@ public class UserController {
             @RequestParam("residenceVerification") MultipartFile residenceVerification,
             @RequestParam("idPicture") MultipartFile idPicture) {
 
-        // Convert MultipartFile to byte[]
+
+
+
+
         byte[] residenceVerificationBytes;
         byte[] idPictureBytes;
         try {

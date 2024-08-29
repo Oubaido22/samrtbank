@@ -20,8 +20,8 @@ public class Account {
 	private String accountNumber;
 	private double balance;
 	private String account_type = "Saving";
-	private String branch = "SGB";
-	private String IFSC_code = "VNB70000";
+	private String branch = "OTBS";
+	private String IFSC_code = "OTB70000";
 	private String Pin;
 	private String accountstatus;
 	@OneToOne

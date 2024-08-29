@@ -68,4 +68,11 @@ public class JwtTokenUtil implements Serializable {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
+	public String generateTemporaryToken(UserDetails userDetails) {
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("isTemporary", true); // Custom claim for temporary access
+		return doGenerateToken(claims, userDetails.getUsername());
+	}
+
+
 }

@@ -67,9 +67,7 @@ public class AccountServiceImpl implements AccountService {
             throw new NotFoundException("Account not found");
         }
 
-        if (!passwordEncoder.matches(password, account.getUser().getPassword())) {
-            throw new UnauthorizedException("Invalid password");
-        }
+
 
         account.setPin(passwordEncoder.encode(pin));
         accountRepository.save(account);

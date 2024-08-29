@@ -8,9 +8,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,53 +45,61 @@ public class WebSecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 
+//    @Bean
+//    @Override
+//    public AuthenticationManager authenticationManagerBean() throws Exception {
+//        return super.authenticationManagerBean();
+//    }
+
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
 			throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
 
-	private static final String[] WHITE_LIST_URLS = {
-			"/api/users/register",
-			"/api/users/login",
-			"/api/users/generate-otp",
-			"/api/users/verify-otp",
-			"/swagger-ui.html",
-			"/v3/api-docs/**",
-			"/swagger-ui/**",
-			"/actuator/**"
-	};
+	/*
+	 *
+	 *
+	 * */
+
+	private static final String[] WHITE_LIST_URL = { "/api/users/register", "/api/users/login",
+			"/api/users/generate-otp", "/api/users/verify-otp" };
 
 	@Bean
-
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http
-				.csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity; adjust if needed
-				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-						.requestMatchers("/api/users/register",
-								"/api/users/login",
-								"/api/users/generate-otp",
-								"/api/users/verify-otp",
-								"/api/users/upload-info", // Include this endpoint
-								"/swagger-ui.html",
-								"/v3/api-docs/**",
-								"/swagger-ui/**",
-								"/actuator/**").permitAll() // Whitelisted endpoints
-						.anyRequest().authenticated() // Secure all other endpoints
-				)
-				.exceptionHandling(exception -> exception
-						.authenticationEntryPoint(jwtAuthenticationEntryPoint) // Handle unauthorized access
-				)
-				.sessionManagement(session -> session
-						.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions for JWT
-				);
 
-		// Add JWT filter before the default username/password authentication filter
+
+		http.csrf().disable().authorizeHttpRequests()
+				.requestMatchers("/api/users/register").permitAll()
+				.requestMatchers("/api/users/upload-info").permitAll()
+				.requestMatchers("/api/users/login").permitAll()
+				.requestMatchers("/api/users/generate-otp").permitAll()
+				.requestMatchers("/api/users/verify-otp").permitAll()
+				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+				.requestMatchers("swagger-ui.html","/v3/api-docs/**","/swagger-ui/**","/actuator/**").permitAll()
+				.anyRequest().authenticated().and().exceptionHandling()
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
 
-
+//    @Override
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception  {
+//    	 http.cors().and().csrf().disable()
+//    	 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//         .exceptionHandling(auth -> auth.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+//                .authorizeRequests()
+//                .antMatchers().permitAll()
+//                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                .anyRequest().authenticated()
+//
+//
+//            http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+//    	 return http.build();
+//
+//    }
+//
 }

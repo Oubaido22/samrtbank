@@ -4,6 +4,7 @@ import com.webapp.bankingportal.exception.UserValidation;
 import com.webapp.bankingportal.util.LoggedinUser;
 import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +14,7 @@ import com.webapp.bankingportal.entity.Account;
 import com.webapp.bankingportal.entity.User;
 import com.webapp.bankingportal.repository.UserRepository;
 import org.springframework.web.multipart.MultipartFile;
+import com.webapp.bankingportal.dto.UserResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,7 +30,8 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
 
     private EmailService emailService;
-
+    @Autowired
+    private SystemMetricsAutoConfiguration systemMetricsAutoConfiguration;
 
 
     public UserServiceImpl(UserRepository userRepository, EmailService emailService,AccountService accountService,PasswordEncoder passwordEncoder) {
@@ -68,6 +71,7 @@ public class UserServiceImpl implements UserService{
 
         System.out.println(savedUser.getAccount().getAccountNumber());
         System.out.println(account.getUser().getName());
+
 
 
         return savedUser;

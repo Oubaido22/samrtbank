@@ -65,6 +65,7 @@ public class UserResponse  {
 	public void setAccount_type(String account_type) {
 		this.account_type = account_type;
 	}
+	private String token;
 
 
 	public boolean isApproved() {
@@ -97,5 +98,13 @@ public class UserResponse  {
 
 	public void setUserType(String userType) {
 		this.userType = userType;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 }
